@@ -17,4 +17,5 @@ public:
     bool initialize(Device* device, D3DPRESENT_PARAMETERS* presentationParameters, DXGI_SCALING scaling);
     void wait();
     void present(Device* device, UINT syncInterval);
+    bool resize(Device* device, UINT width, UINT height);
 };

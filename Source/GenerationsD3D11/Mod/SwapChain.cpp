@@ -75,3 +75,30 @@ void SwapChain::present(Device* device, UINT syncInterval)
     swapChain->Present(syncInterval, (syncInterval == 0) ? DXGI_PRESENT_ALLOW_TEARING : 0);
     pendingWait = true;
 }
+
+
+// SwapChain.cpp
+bool SwapChain::resize(Device* device, UINT width, UINT height)
+{
+    if (width == 0 || height == 0)
+        return false;
+
+    //release everything that references the old backbuffer
+    renderTargetSurface.Reset();
+
+    HRESULT hr = swapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN,
+        DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
+
+    if (FAILED(hr))
+        return false;
+
+    //recreate render target
+    ComPtr<ID3D11Texture2D> backBuffer;
+    swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
+
+    ComPtr<RenderTargetTexture> renderTargetTexture;
+    renderTargetTexture.Attach(new RenderTargetTexture(device, backBuffer.Get(), nullptr));
+    renderTargetTexture->GetSurfaceLevel(0, reinterpret_cast<Surface**>(renderTargetSurface.GetAddressOf()));
+
+    return true;
+}

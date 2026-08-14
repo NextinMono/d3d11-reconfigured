@@ -63,6 +63,32 @@ HRESULT D3D9::GetDeviceCaps(UINT Adapter, D3DDEVTYPE DeviceType, D3DCAPS9* pCaps
 
 FUNCTION_STUB(HMONITOR, D3D9::GetAdapterMonitor, UINT Adapter)
 
+void CalculateCenterPosition(LONG& x, LONG& y, LONG& width, LONG& height, MONITORINFO monitorInfo, UINT backBufferWidth, UINT backBufferHeight)
+{
+    width = monitorInfo.rcWork.right - monitorInfo.rcWork.left;
+    height = monitorInfo.rcWork.bottom - monitorInfo.rcWork.top;
+
+    x = monitorInfo.rcWork.left;
+    y = monitorInfo.rcWork.top;
+
+    if (backBufferWidth > width)
+    {
+        width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+        x = monitorInfo.rcMonitor.left;
+    }
+
+    if (backBufferHeight > height)
+    {
+        height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+        y = monitorInfo.rcMonitor.top;
+    }
+
+    x += (width - backBufferWidth) / 2;
+    y += (height - backBufferHeight) / 2;
+
+    width = backBufferWidth;
+    height = backBufferHeight;
+}
 HRESULT D3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, Device** ppReturnedDeviceInterface)
 {
     DisplayMode displayMode = Configuration::displayMode;
@@ -83,56 +109,43 @@ HRESULT D3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
     const LONG backBufferWidth = static_cast<LONG>(pPresentationParameters->BackBufferWidth);
     const LONG backBufferHeight = static_cast<LONG>(pPresentationParameters->BackBufferHeight);
 
-    if (displayMode == DisplayMode::Borderless || displayMode == DisplayMode::Windowed)
-    {
-        width = monitorInfo.rcWork.right - monitorInfo.rcWork.left;
-        height = monitorInfo.rcWork.bottom - monitorInfo.rcWork.top;
+	if (!Configuration::ignoreConfiguration)
+	{
+		if (displayMode == DisplayMode::Borderless || displayMode == DisplayMode::Windowed)
+		{
+            CalculateCenterPosition(x, y, width, height, monitorInfo, backBufferWidth, backBufferHeight);
+			if (displayMode == DisplayMode::Windowed)
+			{
+				style = WS_OVERLAPPEDWINDOW;
+				if (!Configuration::allowResizeInWindowed)
+					style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+			}
+		}
+		else
+		{
+			x = monitorInfo.rcMonitor.left;
+			y = monitorInfo.rcMonitor.top;
+			width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+			height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+		}
 
-        x = monitorInfo.rcWork.left;
-        y = monitorInfo.rcWork.top;
-
-        if (backBufferWidth > width)
+		if (displayMode == DisplayMode::Windowed)
+			ShowCursor(true);
+	}
+	else
+	{
+        CalculateCenterPosition(x, y, width, height, monitorInfo, backBufferWidth, backBufferHeight);
+        if (pPresentationParameters->Windowed == TRUE)
         {
-            width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
-            x = monitorInfo.rcMonitor.left;
-        }
-
-        if (backBufferHeight > height)
-        {
-            height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
-            y = monitorInfo.rcMonitor.top;
-        }
-
-        x += (width - backBufferWidth) / 2;
-        y += (height - backBufferHeight) / 2;
-
-        width = backBufferWidth;
-        height = backBufferHeight;
-
-        if (displayMode == DisplayMode::Windowed)
-        {
+            ShowCursor(true);
             style = WS_OVERLAPPEDWINDOW;
-            if (!Configuration::allowResizeInWindowed)
-                style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
         }
-    }
-    else
-    {
-        x = monitorInfo.rcMonitor.left;
-        y = monitorInfo.rcMonitor.top;
-        width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
-        height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
-    }
-
-    if (displayMode == DisplayMode::Windowed)
-        ShowCursor(true);
-
-    const DXGI_SCALING scaling = 
-        Configuration::allowResizeInWindowed || 
+	}
+    const DXGI_SCALING scaling = Configuration::ignoreConfiguration ? DXGI_SCALING_ASPECT_RATIO_STRETCH :
+        (Configuration::allowResizeInWindowed || 
         width != pPresentationParameters->BackBufferWidth ||
-        height != pPresentationParameters->BackBufferHeight ? DXGI_SCALING_STRETCH : DXGI_SCALING_NONE;
+        height != pPresentationParameters->BackBufferHeight ? DXGI_SCALING_STRETCH : DXGI_SCALING_NONE);
 
-    pPresentationParameters->Windowed = TRUE;
 
     *ppReturnedDeviceInterface = new Device(pPresentationParameters, scaling);
 
@@ -148,7 +161,7 @@ HRESULT D3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
     SetWindowPos(pPresentationParameters->hDeviceWindow, HWND_TOP, x, y, width, height, SWP_FRAMECHANGED);
 
     // In windowed, title bar and border are included when setting width/height. Let's fix that and not be like Lost World/Forces.
-    if (displayMode == DisplayMode::Windowed)
+    if ((Configuration::ignoreConfiguration && pPresentationParameters->Windowed == TRUE) || displayMode == DisplayMode::Windowed)
     {
         RECT windowRect, clientRect;
         GetWindowRect(pPresentationParameters->hDeviceWindow, &windowRect);
@@ -172,6 +185,7 @@ HRESULT D3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
             height + deltaY,
             SWP_FRAMECHANGED);
     }
+    pPresentationParameters->Windowed = TRUE;
 
     return S_OK;
 }

@@ -155,7 +155,7 @@ public:
     ID3D11Device* get() const;
     ID3D11DeviceContext* getContext() const;
     SwapChain& getSwapChain();
-
+    void onResize(UINT width, UINT height);
     CriticalSection& getCriticalSection();
     std::lock_guard<CriticalSection> lock();
 

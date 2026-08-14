@@ -15,6 +15,7 @@ public:
     static bool lowLatencyMode;
     static bool disableShaderCompilerNotification;
     static bool compileShadersBeforeStarting;
+    static bool ignoreConfiguration;
 
     static bool load(const std::string& filePath);
 };

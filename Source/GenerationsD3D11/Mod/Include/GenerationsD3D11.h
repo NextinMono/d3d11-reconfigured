@@ -21,6 +21,8 @@ namespace GenerationsD3D11
     inline ID3D11ShaderResourceView* (*GetShaderResourceView)(DX_PATCH::IDirect3DBaseTexture9* dxpBaseTexture);
     inline ID3D11RenderTargetView* (*GetRenderTargetView)(DX_PATCH::IDirect3DSurface9* dxpSurface);
     inline ID3D11DepthStencilView* (*GetDepthStencilView)(DX_PATCH::IDirect3DSurface9* dxpSurface);
+    inline void (*EnableIgnoreConfiguration)();
+    inline void (*Resize)(DX_PATCH::IDirect3DDevice9* dxpDevice, int w, int h);
 
     class LockGuard
     {
@@ -61,6 +63,8 @@ namespace GenerationsD3D11
         any |= SetFunctionPointer(GetShaderResourceView, module, "GenerationsD3D11_GetShaderResourceView");
         any |= SetFunctionPointer(GetRenderTargetView, module, "GenerationsD3D11_GetRenderTargetView");
         any |= SetFunctionPointer(GetDepthStencilView, module, "GenerationsD3D11_GetDepthStencilView");
+        any |= SetFunctionPointer(EnableIgnoreConfiguration, module, "GenerationsD3D11_EnableIgnoreConfiguration");
+        any |= SetFunctionPointer(Resize, module, "GenerationsD3D11_Resize");
 
         if (any)
         {

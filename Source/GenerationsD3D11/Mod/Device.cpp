@@ -51,6 +51,32 @@ alignas(64) GlobalsVS globalsVS;
 alignas(64) GlobalsPS globalsPS;
 alignas(64) GlobalsShared globalsShared;
 
+void Device::onResize(UINT width, UINT height)
+{
+    deviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+
+    for (size_t i = 0; i < _countof(renderTargets); i++)
+        renderTargets[i] = nullptr;
+
+    depthStencil = nullptr; 
+
+    dirty |= (1 << DirtyRenderTarget);
+
+    //resize swapchain
+    getSwapChain().resize(this, width, height);
+    SetRenderTarget(0, swapChain.getRenderTargetSurface());
+
+    //update viewport
+    viewport.Width = (float)width;
+    viewport.Height = (float)height;
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+
+    dirty |= (1 << DirtyViewport) | (1 << DirtyRenderTarget);
+    flush();
+}
 void Device::flush()
 {
     if (dirty & (1 << DirtyRenderTarget))
@@ -304,8 +330,8 @@ Device::Device(D3DPRESENT_PARAMETERS* presentationParameters, DXGI_SCALING scali
 
     infoQueue->AddStorageFilterEntries(&filter);
 #endif
-
-    swapChain.initialize(this, presentationParameters, scaling);
+    printf("DIRECT3D11: %d", (int)scaling);
+    swapChain.initialize(this, presentationParameters, DXGI_SCALING_NONE);
 
     depthStencilState = CD3D11_DEPTH_STENCIL_DESC(CD3D11_DEFAULT());
     rasterizerState = CD3D11_RASTERIZER_DESC(CD3D11_DEFAULT());

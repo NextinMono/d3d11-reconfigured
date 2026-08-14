@@ -5,6 +5,7 @@
 #include "RenderTargetSurface.h"
 #include "Resource.h"
 #include "Texture.h"
+#include "Configuration.h"
 
 extern "C" __declspec(dllexport) ID3D11Device* GenerationsD3D11_GetDevice(DX_PATCH::IDirect3DDevice9* dxpDevice)
 {
@@ -45,4 +46,13 @@ extern "C" __declspec(dllexport) ID3D11DepthStencilView* GenerationsD3D11_GetDep
 {
     return reinterpret_cast<DepthStencilSurface*>(dxpSurface)->getDSV();
 
+}
+extern "C" __declspec(dllexport) void GenerationsD3D11_EnableIgnoreConfiguration()
+{
+    Configuration::ignoreConfiguration = true;
+}
+
+extern "C" __declspec(dllexport) void GenerationsD3D11_Resize(DX_PATCH::IDirect3DDevice9* dxpDevice, int w, int h)
+{
+    reinterpret_cast<Device*>(dxpDevice)->onResize(w, h);
 }

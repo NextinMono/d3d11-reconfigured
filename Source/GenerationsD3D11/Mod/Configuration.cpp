@@ -5,6 +5,7 @@ bool Configuration::allowResizeInWindowed = false;
 bool Configuration::lowLatencyMode = false;
 bool Configuration::disableShaderCompilerNotification = false;
 bool Configuration::compileShadersBeforeStarting = false;
+bool Configuration::ignoreConfiguration = false;
 
 bool Configuration::load(const std::string& filePath)
 {
