@@ -166,51 +166,6 @@ HICON __stdcall LoadIconImpl(HINSTANCE hInstance, LPCSTR lpIconName)
 {
 	return LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(2057));
 }
-UINT g_pendingWidth;
-UINT g_pendingHeight;
-bool g_isResizing;
-
-
-HOOK(LRESULT, __stdcall, WndProc, 0xE7B6C0, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-	auto resizeSwapchain = [&]()
-		{
-			auto appDoc = Sonic::CApplicationDocument::GetInstance();
-			if (!appDoc)
-				return;
-			auto d3ddevice = (Device*)Sonic::CApplicationDocument::GetInstance()->m_pMember->m_spRenderingInfrastructure->m_RenderingDevice.m_pD3DDevice;
-			d3ddevice->onResize(g_pendingWidth, g_pendingHeight);
-		};
-
-	switch (Msg)
-	{
-	case WM_ENTERSIZEMOVE:
-		g_isResizing = true;
-		break;
-
-	case WM_SIZE:
-	{
-		if (wParam != SIZE_MINIMIZED)
-		{
-			g_pendingWidth = LOWORD(lParam);
-			g_pendingHeight = HIWORD(lParam);
-			//maximizing doesnt call enter and exit
-			//so if this is the case, just resize
-			if (!g_isResizing)
-			{
-				resizeSwapchain();
-			}
-		}
-		break;
-	}
-
-	case WM_EXITSIZEMOVE:
-		g_isResizing = false;
-		resizeSwapchain();
-		break;
-	}
-	return originalWndProc(hWnd, Msg, wParam, lParam);
-}
 
 HOOK(D3D9*, __cdecl, Direct3DCreate, 0xA5EDD0, UINT SDKVersion)
 {
@@ -283,7 +238,7 @@ extern "C" __declspec(dllexport) void PostInit(ModInfo* info) // PostInit to pre
 	INSTALL_HOOK(LoadPictureData);
 	INSTALL_HOOK(FillTexture);
 	INSTALL_HOOK(Direct3DCreate);
-	INSTALL_HOOK(WndProc);
+	//INSTALL_HOOK(WndProc);
 
 	// Patch the window function to load the icon in the executable.
 	// However, check whether any mods already wrote over this first.

@@ -92,6 +92,8 @@ void CalculateCenterPosition(LONG& x, LONG& y, LONG& width, LONG& height, MONITO
 HRESULT D3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, Device** ppReturnedDeviceInterface)
 {
     DisplayMode displayMode = Configuration::displayMode;
+
+    //TODO: replace code check with new HE1ML code check, when that releases
     if (displayMode != DisplayMode::Windowed && *(uint8_t*)0xA5EB5B != 0x89) // Check if Borderless Fullscreen patch is enabled in HMM
         displayMode = DisplayMode::BorderlessFullscreen;
 
@@ -134,12 +136,12 @@ HRESULT D3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
 	}
 	else
 	{
-        CalculateCenterPosition(x, y, width, height, monitorInfo, backBufferWidth, backBufferHeight);
-        if (pPresentationParameters->Windowed == TRUE)
-        {
-            ShowCursor(true);
-            style = WS_OVERLAPPEDWINDOW;
-        }
+        //CalculateCenterPosition(x, y, width, height, monitorInfo, backBufferWidth, backBufferHeight);
+        //if (pPresentationParameters->Windowed == TRUE)
+        //{
+        //    ShowCursor(true);
+        //    style = WS_OVERLAPPEDWINDOW;
+        //}
 	}
     const DXGI_SCALING scaling = Configuration::ignoreConfiguration ? DXGI_SCALING_ASPECT_RATIO_STRETCH :
         (Configuration::allowResizeInWindowed || 
@@ -150,40 +152,40 @@ HRESULT D3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindo
     *ppReturnedDeviceInterface = new Device(pPresentationParameters, scaling);
 
     // Force the window to the foreground.
-    const DWORD windowThreadProcessId = GetWindowThreadProcessId(GetForegroundWindow(), NULL);
-    const DWORD currentThreadId = GetCurrentThreadId();
-    AttachThreadInput(windowThreadProcessId, currentThreadId, TRUE);
-    BringWindowToTop(pPresentationParameters->hDeviceWindow);
-    ShowWindow(pPresentationParameters->hDeviceWindow, SW_SHOW);
-    AttachThreadInput(windowThreadProcessId, currentThreadId, FALSE);
-
-    SetWindowLongPtr(pPresentationParameters->hDeviceWindow, GWL_STYLE, WS_VISIBLE | style);
-    SetWindowPos(pPresentationParameters->hDeviceWindow, HWND_TOP, x, y, width, height, SWP_FRAMECHANGED);
+    //const DWORD windowThreadProcessId = GetWindowThreadProcessId(GetForegroundWindow(), NULL);
+    //const DWORD currentThreadId = GetCurrentThreadId();
+    //AttachThreadInput(windowThreadProcessId, currentThreadId, TRUE);
+    //BringWindowToTop(pPresentationParameters->hDeviceWindow);
+    //ShowWindow(pPresentationParameters->hDeviceWindow, SW_SHOW);
+    //AttachThreadInput(windowThreadProcessId, currentThreadId, FALSE);
+    //
+    //SetWindowLongPtr(pPresentationParameters->hDeviceWindow, GWL_STYLE, WS_VISIBLE | style);
+    //SetWindowPos(pPresentationParameters->hDeviceWindow, HWND_TOP, x, y, width, height, SWP_FRAMECHANGED);
 
     // In windowed, title bar and border are included when setting width/height. Let's fix that and not be like Lost World/Forces.
     if ((Configuration::ignoreConfiguration && pPresentationParameters->Windowed == TRUE) || displayMode == DisplayMode::Windowed)
     {
-        RECT windowRect, clientRect;
-        GetWindowRect(pPresentationParameters->hDeviceWindow, &windowRect);
-        GetClientRect(pPresentationParameters->hDeviceWindow, &clientRect);
-
-        const LONG windowWidth = windowRect.right - windowRect.left;
-        const LONG windowHeight = windowRect.bottom - windowRect.top;
-
-        const LONG clientWidth = clientRect.right - clientRect.left;
-        const LONG clientHeight = clientRect.bottom - clientRect.top;
-
-        const LONG deltaX = windowWidth - clientWidth;
-        const LONG deltaY = windowHeight - clientHeight;
-
-        SetWindowPos(
-            pPresentationParameters->hDeviceWindow,
-            HWND_TOP,
-            x - deltaX / 2,
-            y - deltaY / 2,
-            width + deltaX,
-            height + deltaY,
-            SWP_FRAMECHANGED);
+        //RECT windowRect, clientRect;
+        //GetWindowRect(pPresentationParameters->hDeviceWindow, &windowRect);
+        //GetClientRect(pPresentationParameters->hDeviceWindow, &clientRect);
+        //
+        //const LONG windowWidth = windowRect.right - windowRect.left;
+        //const LONG windowHeight = windowRect.bottom - windowRect.top;
+        //
+        //const LONG clientWidth = clientRect.right - clientRect.left;
+        //const LONG clientHeight = clientRect.bottom - clientRect.top;
+        //
+        //const LONG deltaX = windowWidth - clientWidth;
+        //const LONG deltaY = windowHeight - clientHeight;
+        //
+        //SetWindowPos(
+        //    pPresentationParameters->hDeviceWindow,
+        //    HWND_TOP,
+        //    x - deltaX / 2,
+        //    y - deltaY / 2,
+        //    width + deltaX,
+        //    height + deltaY,
+        //    SWP_FRAMECHANGED);
     }
     pPresentationParameters->Windowed = TRUE;
 
