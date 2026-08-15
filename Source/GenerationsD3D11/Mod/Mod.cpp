@@ -253,18 +253,15 @@ HOOK(int, __stdcall, SampleInput, 0xD683C0, float a1)
 
 extern "C" __declspec(dllexport) void Init(ModInfo* info)
 {
-#if _DEBUG
-	MessageBox(nullptr, TEXT("Attach to Debugger"), TEXT("GenerationsD3D11"), MB_ICONWARNING);
-#endif
-
 	std::string dir = info->CurrentMod->Path;
 
 	size_t pos = dir.find_last_of("\\/");
 	if (pos != std::string::npos)
 		dir.erase(pos + 1);
 
-	if (!Configuration::load(dir + "GenerationsD3D11.ini"))
-		MessageBox(nullptr, TEXT("Unable to open \"GenerationsD3D11.ini\" in mod directory."), TEXT("GenerationsD3D11"), MB_ICONERROR);
+	//Configuration::compileShadersBeforeStarting = true;
+	//if (!Configuration::load(dir + "GenerationsD3D11.ini"))
+	//	MessageBox(nullptr, TEXT("Unable to open \"GenerationsD3D11.ini\" in mod directory."), TEXT("GenerationsD3D11"), MB_ICONERROR);
 
 	ShaderCache::directoryPath = dir;
 
